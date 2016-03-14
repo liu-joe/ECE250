@@ -66,56 +66,63 @@ Quadtree<T>::~Quadtree() {
 
 template <typename T>
 int Quadtree<T>::size() const {
-    return 0;
+    return count;
 }
 
 template <typename T>
 bool Quadtree<T>::empty() const {
-    return true;
+    return count == 0;
 }
 
 template <typename T>
 T Quadtree<T>::min_x() const {
-    return T();
+    return tree_root->min_x();
 }
 
 template <typename T>
 T Quadtree<T>::min_y() const {
-    return T();
+    return tree_root->min_y();
 }
 
 template <typename T>
 T Quadtree<T>::max_x() const {
-    return T();
+    return tree_root->max_x();
 }
 
 template <typename T>
 T Quadtree<T>::max_y() const {
-    return T();
+    return tree_root->max_y();
 }
 
 template <typename T>
 T Quadtree<T>::sum_x() const {
-    return T();
+    return tree_root->sum_x();
 }
 
 template <typename T>
 T Quadtree<T>::sum_y() const {
-    return T();
+    return tree_root->sum_y();
 }
 
 template <typename T>
 Quadtree_node<T> *Quadtree<T>::root() const {
-    return 0;
+    return tree_root;
 }
 
 template <typename T>
 bool Quadtree<T>::member( T const &x, T const &y ) const {
-    return false;
+    return tree_root->member(x, y);
 }
 
 template <typename T>
 void Quadtree<T>::insert( T const &x, T const &y ) {
+    if ( tree_root == 0 ) {
+        Quadtree_node<T> newNode(x, y);
+        tree_root = &newNode;
+        ++count;
+    } else if ( tree_root->insert(x, y) ) {
+        ++count;
+    }
 }
 
 template <typename T>

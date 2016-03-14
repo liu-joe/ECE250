@@ -100,45 +100,78 @@ Quadtree_node<T> *Quadtree_node<T>::se() const {
 
 template <typename T>
 T Quadtree_node<T>::min_x() const {
-    // you may use std::min
-    return T();
+    if ( north_west == 0 ) {
+        if ( south_west == 0 ) {
+            return x_value;
+        } else {
+            return north_west->min_x();
+        }
+    } else {
+        if ( south_west == 0 ) {
+            return north_west->min_x();
+        } else {
+            return std::min(north_west->min_x(), south_west->min_x());
+        }
+    }
 }
 
 template <typename T>
 T Quadtree_node<T>::min_y() const {
-    // you may use std::min
-    return T();
+    if ( south_west == 0 ) {
+        if ( south_east == 0 ) {
+            return y_value;
+        } else {
+            return south_east->min_y();
+        }
+    } else {
+        if ( south_east == 0 ) {
+            return south_west->min_y();
+        } else {
+            return std::min(south_west->min_y(), south_east->min_y());
+        }
+    }
 }
 
+// TODO: fix the max values
 template <typename T>
 T Quadtree_node<T>::max_x() const {
-    // you may use std::max
+    //T max = std::max(north_east->max_x(), south_east->max_x());
     return T();
 }
 
 template <typename T>
 T Quadtree_node<T>::max_y() const {
-    // you may use std::max
+    //T max = std::max(north_east->max_y(), north_west->max_y());
     return T();
 }
 
 template <typename T>
 T Quadtree_node<T>::sum_x() const {
     if ( this == 0 ) {
-        // hint...
         return 0;
     } else {
-        return 0;
+        T sum = 0;
+        sum += north_east->sum_x();
+        sum += south_east->sum_x();
+        sum += south_west->sum_x();
+        sum += north_west->sum_x();
+        sum += x_value;
+        return sum;
     }
 }
 
 template <typename T>
 T Quadtree_node<T>::sum_y() const {
     if ( this == 0 ) {
-        // hint...
         return 0;
     } else {
-        return 0;
+        T sum = 0;
+        sum += north_east->sum_y();
+        sum += south_east->sum_y();
+        sum += south_west->sum_y();
+        sum += north_west->sum_y();
+        sum += y_value;
+        return sum;
     }
 }
 
@@ -148,16 +181,78 @@ bool Quadtree_node<T>::member( T const &x, T const &y ) const {
         return false;
     }
     
-    return false;
+    if ( x_value == x && y_value == y) {
+        return true;
+    }
+    
+    
+    if ( x_value <= x ) { 
+        if ( y_value <= y ) {
+            return north_east->member(x, y);
+        } else {
+            return south_east->member(x, y);
+        }
+    } else {
+        if ( y_value <= y ) {
+            return north_west->member(x, y);
+        } else {
+            return south_west->member(x, y);
+        }
+    }
 }
 
 template <typename T>
 bool Quadtree_node<T>::insert( T const &x, T const &y ) {
-    return false;
+    
+    if ( x_value == x && y_value == y) {
+        return false;
+    }
+    
+    Quadtree_node<T> newNode(x, y);
+    Quadtree_node *newPointer = &newNode;
+    
+    if ( x_value <= x ) {
+        if ( y_value <= y ) {
+            if ( north_east == 0 ) {
+                north_east = newPointer;
+            } else {
+                return north_east->insert(x, y);
+            }
+        } else {
+            if ( south_east == 0 ) {
+                south_east = newPointer;
+            } else {
+                return south_east->insert(x, y);
+            }
+        }
+    } else {
+        if ( y_value <= y ) {
+            if ( north_west == 0 ) {
+                north_west = newPointer;
+            } else {
+                return north_west->insert(x, y);
+            }
+        } else {
+            if ( south_west == 0 ) {
+                south_west = newPointer;
+            } else {
+                return south_east->insert(x, y);
+            }
+        }
+    }
+    return true;
 }
 
 template <typename T>
 void Quadtree_node<T>::clear() {
+    if ( this == 0 ) {
+        return;
+    }
+    north_east->clear();
+    north_west->clear();
+    south_east->clear();
+    south_west->clear();
+    this = 0;
 }
 
 // Is an error showing up in ece250.h or elsewhere?
