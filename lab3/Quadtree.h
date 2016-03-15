@@ -111,7 +111,6 @@ Quadtree_node<T> *Quadtree<T>::root() const {
 
 template <typename T>
 bool Quadtree<T>::member( T const &x, T const &y ) const {
-    return tree_root->member(x, y);
 }
 
 template <typename T>

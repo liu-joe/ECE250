@@ -135,13 +135,37 @@ T Quadtree_node<T>::min_y() const {
 // TODO: fix the max values
 template <typename T>
 T Quadtree_node<T>::max_x() const {
-    //T max = std::max(north_east->max_x(), south_east->max_x());
-    return T();
+    if ( north_east == 0 ) {
+        if ( south_east == 0 ) {
+            return x_value;
+        } else {
+            return south_east->max_x();
+        }
+    } else {
+        if ( south_east == 0 ) {
+            return north_east->max_x();
+        } else {
+            return std::max(north_east->max_x(), south_east->max_x());
+        }
+    }
 }
 
 template <typename T>
 T Quadtree_node<T>::max_y() const {
     //T max = std::max(north_east->max_y(), north_west->max_y());
+    if ( north_west == 0 ) {
+        if ( north_east == 0 ) {
+            return y_value;
+        } else {
+            return north_east->max_y();
+        }
+    } else {
+        if ( north_east == 0 ) {
+            return north_west->max_y();
+        } else {
+            return std::max(north_west->max_y(), north_east->max_y());
+        }
+    }
     return T();
 }
 
@@ -177,26 +201,38 @@ T Quadtree_node<T>::sum_y() const {
 
 template <typename T>
 bool Quadtree_node<T>::member( T const &x, T const &y ) const {
-    if ( this == 0 ) {
-        return false;
-    }
     
     if ( x_value == x && y_value == y) {
         return true;
     }
     
-    
     if ( x_value <= x ) { 
         if ( y_value <= y ) {
-            return north_east->member(x, y);
+            if ( north_east == 0 ) {
+                return false;
+            } else {
+                return north_east->member(x, y);
+            }
         } else {
-            return south_east->member(x, y);
+            if ( south_east == 0 ) {
+                return false;
+            } else {
+                return south_east->member(x, y);
+            }
         }
     } else {
         if ( y_value <= y ) {
-            return north_west->member(x, y);
+            if ( north_west == 0 ) {
+                return false;
+            } else {
+                return north_west->member(x, y);
+            }
         } else {
-            return south_west->member(x, y);
+            if ( south_west == 0) {
+                return false;
+            } else {
+                return south_west->member(x, y);
+            }
         }
     }
 }
@@ -208,19 +244,16 @@ bool Quadtree_node<T>::insert( T const &x, T const &y ) {
         return false;
     }
     
-    Quadtree_node<T> newNode(x, y);
-    Quadtree_node *newPointer = &newNode;
-    
     if ( x_value <= x ) {
         if ( y_value <= y ) {
             if ( north_east == 0 ) {
-                north_east = newPointer;
+                north_east = new Quadtree_node<T>(x, y);
             } else {
                 return north_east->insert(x, y);
             }
         } else {
             if ( south_east == 0 ) {
-                south_east = newPointer;
+                south_east = new Quadtree_node<T>(x, y);
             } else {
                 return south_east->insert(x, y);
             }
@@ -228,13 +261,13 @@ bool Quadtree_node<T>::insert( T const &x, T const &y ) {
     } else {
         if ( y_value <= y ) {
             if ( north_west == 0 ) {
-                north_west = newPointer;
+                north_west = new Quadtree_node<T>(x, y);
             } else {
                 return north_west->insert(x, y);
             }
         } else {
             if ( south_west == 0 ) {
-                south_west = newPointer;
+                south_west = new Quadtree_node<T>(x, y);
             } else {
                 return south_east->insert(x, y);
             }
@@ -245,14 +278,26 @@ bool Quadtree_node<T>::insert( T const &x, T const &y ) {
 
 template <typename T>
 void Quadtree_node<T>::clear() {
-    if ( this == 0 ) {
-        return;
+    if ( north_east != 0 ) {
+        north_east->clear();
+        delete north_east;
     }
-    north_east->clear();
-    north_west->clear();
-    south_east->clear();
-    south_west->clear();
-    this = 0;
+    if ( north_west != 0 ) {
+        north_west->clear();
+        delete north_west;
+    }
+    if ( south_east != 0 ) {
+        south_east->clear();
+        delete south_east;
+    }
+    if ( south_west != 0 ) {
+        south_west->clear();
+        delete south_west;
+    }
+    north_east = 0;
+    north_west = 0;
+    south_east = 0;
+    south_west = 0;
 }
 
 // Is an error showing up in ece250.h or elsewhere?
