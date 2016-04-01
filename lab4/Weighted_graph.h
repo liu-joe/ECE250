@@ -8,7 +8,7 @@
 /****************************************
  * UW User ID:  z324liu
  * Submitted for ECE 250
- * Semester of Submission:  (Winter|Spring|Fall) 2016
+ * Semester of Submission:  Winter 2016
  *
  * By submitting this file, I affirm that
  * I am the author of all modifications to
@@ -49,8 +49,9 @@ const double Weighted_graph::INF = std::numeric_limits<double>::infinity();
 
 // Enter definitions for all public functions here
 
-//TODO
+// Destructor
 Weighted_graph::~Weighted_graph() {
+    numEdge = 0;
     for ( int idx = 0; idx < size; ++idx ) {
         delete[] graph_matrix[idx];
     }
@@ -58,8 +59,8 @@ Weighted_graph::~Weighted_graph() {
     delete[] graph_degree;
 }
 
+// Constructor
 Weighted_graph::Weighted_graph( int n ) {
-    
     if ( n < 0 ) {
         throw illegal_argument();
     }
@@ -104,12 +105,15 @@ double Weighted_graph::adjacent( int m, int n ) const {
 }
 
 bool Weighted_graph::is_connected() const {
+    
+    // Temporary dynamic array to store if a node is connected
     bool* connected = new bool[size];
     connected[0] = true;
     for ( int idx = 1; idx < size; ++idx ) {
         connected[idx] = false;
     }
     
+    // Recursively call testIndex to find all nodes that are connected to node 0
     for ( int idx = 1; idx < size; ++idx ) {
         if ( graph_matrix[0][idx] != 0)  {
             testIndex( idx, connected );
@@ -118,14 +122,19 @@ bool Weighted_graph::is_connected() const {
     
     for ( int idx = 0; idx < size; ++idx ) {
         if ( connected[idx] == 0 ) {
+            
+            // Delete dynamically allocated arrays before returning
+            delete[] connected;
             return false;
         }
     }
     
+    // Delete dynamically allocated arrays before returning
     delete[] connected;
     return true;
 }
 
+// Recursive algorithm to find all nodes connected to  node m
 void Weighted_graph::testIndex( int m, bool* connected ) const {
     if ( connected[m] == 0 ) {
         connected[m] = 1;
@@ -144,6 +153,7 @@ double Weighted_graph::minimum_spanning_tree( int m ) const {
         throw illegal_argument();
     }
     
+    // Temporary dynamic array to store nodes that are in the current tree
     bool* currentTree = new bool[size];
     for ( int idx = 0; idx < size; ++idx ) {
         currentTree[idx] = false;
@@ -156,6 +166,7 @@ double Weighted_graph::minimum_spanning_tree( int m ) const {
         totalWeight += findMin( currentTree );
     }
     
+    // Delete dynamically allocated arrays before returning
     delete[] currentTree;
     return totalWeight;
     
@@ -166,6 +177,9 @@ double Weighted_graph::findMin( bool* currentTree ) const {
     int minX = -1;
     int minY = -1;
     
+    // Search the entire matrix, only use nodes where the weight is less than 
+    // min weight, the edge exists, and one node is in the tree while the other
+    // node is out of the tree
     for ( int x = 0; x < size; ++x ) {
         for ( int y = 0; y < size; ++y ) {
             if ( graph_matrix[x][y] != 0 && graph_matrix[x][y] < minValue ) {
@@ -195,7 +209,7 @@ void Weighted_graph::insert( int m, int n, double w ) {
         throw illegal_argument();
     }
     
-    // If point already exists
+    // If point already exists, but is being removed
     if ( graph_matrix[m][n] != 0 ) {
         if ( w == 0 ) {
             --numEdge;
@@ -204,7 +218,7 @@ void Weighted_graph::insert( int m, int n, double w ) {
         }
     } 
     
-    // If point doesn't exist yet
+    // If point doesn't exist yet, and is being added
     else {
         if ( w != 0 ) {
             ++numEdge;
@@ -213,6 +227,7 @@ void Weighted_graph::insert( int m, int n, double w ) {
         }
     }
     
+    // Add the node on both corners of the matrix
     graph_matrix[m][n] = w;
     graph_matrix[n][m] = w;
 }
