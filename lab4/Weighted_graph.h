@@ -6,9 +6,9 @@
 #include "Exception.h"
 
 /****************************************
- * UW User ID:  uwuserid
+ * UW User ID:  z324liu
  * Submitted for ECE 250
- * Semester of Submission:  (Winter|Spring|Fall) 20NN
+ * Semester of Submission:  (Winter|Spring|Fall) 2016
  *
  * By submitting this file, I affirm that
  * I am the author of all modifications to
@@ -25,7 +25,8 @@ private:
     int size;
     int numEdge;
     
-    void testIndex( int, bool* );
+    void testIndex( int, bool* ) const;
+    double findMin( bool* ) const;
     
 public:
     Weighted_graph( int = 50 );
@@ -48,8 +49,21 @@ const double Weighted_graph::INF = std::numeric_limits<double>::infinity();
 
 // Enter definitions for all public functions here
 
-//TODO: add exception
+//TODO
+Weighted_graph::~Weighted_graph() {
+    for ( int idx = 0; idx < size; ++idx ) {
+        delete[] graph_matrix[idx];
+    }
+    delete[] graph_matrix;
+    delete[] graph_degree;
+}
+
 Weighted_graph::Weighted_graph( int n ) {
+    
+    if ( n < 0 ) {
+        throw illegal_argument();
+    }
+    
     graph_matrix = new double*[n];
     for (int idx = 0; idx < n; ++idx) {
         graph_matrix[idx] = new double[n];
@@ -62,34 +76,38 @@ Weighted_graph::Weighted_graph( int n ) {
     numEdge = 0;
 }
 
-//TODO: add exception
-int Weighted_graph::degree( int index ) {
+int Weighted_graph::degree( int index ) const {
+    if ( index < 0 || index >= size ) {
+        throw illegal_argument();
+    }
     return graph_degree[index];
 }
 
-//TODO: add exception
-int Weighted_graph::edge_count() {
+int Weighted_graph::edge_count() const {
     return numEdge;
 }
 
-//TODO: add exception 
-double Weighted_graph::adjacent( int m, int n ) {
+double Weighted_graph::adjacent( int m, int n ) const {
     if ( m == n ) {
         return 0;
     }
     
     if ( m < 0 || n < 0 || m >= size || n >= size ) {
-        // throw exception
+        throw illegal_argument();
+    }
+    
+    if ( graph_matrix[m][n] == 0 ) {
+        return INF;
     }
     
     return graph_matrix[m][n]; 
 }
 
-bool Weighted_graph::is_connected() {
+bool Weighted_graph::is_connected() const {
     bool* connected = new bool[size];
     connected[0] = true;
     for ( int idx = 1; idx < size; ++idx ) {
-        connected[1] = false;
+        connected[idx] = false;
     }
     
     for ( int idx = 1; idx < size; ++idx ) {
@@ -104,10 +122,11 @@ bool Weighted_graph::is_connected() {
         }
     }
     
+    delete[] connected;
     return true;
 }
 
-void Weighted_graph::testIndex( int m, bool* connected ) {
+void Weighted_graph::testIndex( int m, bool* connected ) const {
     if ( connected[m] == 0 ) {
         connected[m] = 1;
         
@@ -119,22 +138,62 @@ void Weighted_graph::testIndex( int m, bool* connected ) {
     }
 }
 
-//TODO
-Weighted_graph::minimum_spanning_tree( int m ) {
+double Weighted_graph::minimum_spanning_tree( int m ) const {
+    
+    if ( m < 0 || m >= size ) {
+        throw illegal_argument();
+    }
+    
+    bool* currentTree = new bool[size];
+    for ( int idx = 0; idx < size; ++idx ) {
+        currentTree[idx] = false;
+    }
+    currentTree[m] = true;
+    
+    double totalWeight = 0;
+    
+    for ( int idx = 0; idx < size - 1; ++idx ) {
+        totalWeight += findMin( currentTree );
+    }
+    
+    delete[] currentTree;
+    return totalWeight;
     
 }
 
-//TODO: add exception
+double Weighted_graph::findMin( bool* currentTree ) const {
+    double minValue = INF;
+    int minX = -1;
+    int minY = -1;
+    
+    for ( int x = 0; x < size; ++x ) {
+        for ( int y = 0; y < size; ++y ) {
+            if ( graph_matrix[x][y] != 0 && graph_matrix[x][y] < minValue ) {
+                if ( currentTree[x] == false && currentTree[y] == true ) {
+                    minX = x;
+                    minY = y;
+                    minValue = graph_matrix[x][y];
+                }
+            }
+        }
+    }
+    
+    if ( minValue != INF ) {
+        currentTree[minX] = true;
+        return minValue;
+    } else {
+        return 0;
+    }
+}
+
 void Weighted_graph::insert( int m, int n, double w ) {
     if ( m < 0 || n < 0 || m >= size || n >= size || m == n) {
-        // Excpetion
+        throw illegal_argument();
     }
     
     if ( w < 0 || w == INF ) {
-        // Exception
+        throw illegal_argument();
     }
-    
-    graph_matrix[m][n] = w;
     
     // If point already exists
     if ( graph_matrix[m][n] != 0 ) {
@@ -153,6 +212,9 @@ void Weighted_graph::insert( int m, int n, double w ) {
             ++graph_degree[m];
         }
     }
+    
+    graph_matrix[m][n] = w;
+    graph_matrix[n][m] = w;
 }
 
 std::ostream &operator << ( std::ostream &out, Weighted_graph const &graph ) {
